@@ -1,0 +1,6 @@
+.tenants { padding: 20px; }
+.page-header { display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.tenants-table { width:100%; border-collapse: collapse; }
+.tenants-table th, .tenants-table td { border:1px solid #ddd; padding:8px; }
+.edit-btn, .delete-btn, .new-btn { margin-right:8px; }
+.loading { text-align:center; padding:40px; }

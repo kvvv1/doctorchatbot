@@ -8,6 +8,9 @@ import Cancelamentos from './pages/Cancelamentos';
 import Espera from './pages/Espera';
 import Secretaria from './pages/Secretaria';
 import Pacientes from './pages/Pacientes';
+import Tenants from './pages/Tenants';
+import TenantCreate from './pages/TenantCreate';
+import TenantEdit from './pages/TenantEdit';
 import './App.css';
 
 function App() {
@@ -26,6 +29,9 @@ function App() {
               <Route path="/espera" element={<Espera />} />
               <Route path="/secretaria" element={<Secretaria />} />
               <Route path="/pacientes" element={<Pacientes />} />
+              <Route path="/tenants" element={<Tenants />} />
+              <Route path="/tenants/new" element={<TenantCreate />} />
+              <Route path="/tenants/:id" element={<TenantEdit />} />
             </Routes>
           </div>
         </div>

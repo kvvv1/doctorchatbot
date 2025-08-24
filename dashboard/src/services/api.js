@@ -254,4 +254,27 @@ export const dashboardService = {
   }
 };
 
+export const tenantService = {
+  getTenants: async () => {
+    const response = await api.get('/tenants');
+    return response.data;
+  },
+  getTenant: async (id) => {
+    const response = await api.get(`/tenants/${id}`);
+    return response.data;
+  },
+  createTenant: async (tenant) => {
+    const response = await api.post('/tenants', tenant);
+    return response.data;
+  },
+  updateTenant: async (id, tenant) => {
+    const response = await api.put(`/tenants/${id}`, tenant);
+    return response.data;
+  },
+  deleteTenant: async (id) => {
+    const response = await api.delete(`/tenants/${id}`);
+    return response.data;
+  }
+};
+
 export default api; 

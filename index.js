@@ -43,7 +43,9 @@ app.get('/', (req, res) => {
 // API da Dashboard (/api/painel)
 // ------------------------------
 const painelRouter = require('./routes/painel');
+const tenantRouter = require('./routes/tenant');
 app.use('/api/painel', painelRouter);
+app.use('/api/tenants', tenantRouter);
 
 // Rota de webhook para receber mensagens do Z-API
 app.post('/webhook', webhookLimiter, async (req, res) => {
