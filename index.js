@@ -68,6 +68,7 @@ app.post('/webhook', webhookLimiter, async (req, res) => {
       data?.body;
 
     const userMessage = typeof userMessageRaw === 'string' ? userMessageRaw.trim() : '';
+    const tenantId = data.tenantId || req.headers['x-tenant-id'] || 'default';
 
     console.log('🔍 Dados extraídos:', { userPhone, userMessage });
     // Log entrada (somente se habilitado)
@@ -118,7 +119,7 @@ app.post('/webhook', webhookLimiter, async (req, res) => {
     }
 
     // Processa o fluxo da conversa usando o flowController
-    const resposta = await flowController(userMessage, userPhone);
+    const resposta = await flowController(userMessage, userPhone, tenantId);
 
     // Se o fluxo decidir não responder (null/undefined/empty), não enviar mensagem
     if (!resposta) {
@@ -156,7 +157,7 @@ app.get('/test', async (req, res) => {
     const testPhone = '5511999999999';
     
     console.log('🧪 Testando o sistema...');
-    const resposta = await flowController(testMessage, testPhone);
+    const resposta = await flowController(testMessage, testPhone, 'default');
     
     res.json({
       success: true,
@@ -202,7 +203,7 @@ app.post('/test-webhook', async (req, res) => {
       });
     }
     
-    const resposta = await flowController(userMessage, userPhone);
+    const resposta = await flowController(userMessage, userPhone, 'default');
     
     res.json({
       success: true,

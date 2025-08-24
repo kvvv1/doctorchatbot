@@ -7,13 +7,14 @@ exports.handleIncomingMessage = async (req, res) => {
 
     const userPhone = data.from;
     const userMessage = data.message?.text?.trim();
+    const tenantId = data.tenantId || req.headers['x-tenant-id'] || 'default';
 
     if (!userPhone || !userMessage) {
       return res.status(400).send('Mensagem inválida');
     }
 
     // Processa o fluxo da conversa usando o flowController
-    const resposta = await flowController(userMessage, userPhone);
+    const resposta = await flowController(userMessage, userPhone, tenantId);
 
     // Envia mensagem ao usuário
     await zapiService.sendMessage(userPhone, resposta);
