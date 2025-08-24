@@ -84,8 +84,14 @@ export default function Sidebar() {
               <span className="text">Pacientes Cadastrados</span>
             </Link>
           </li>
+          <li className={isActive('/tenants')}>
+            <Link to="/tenants" data-title="Tenants">
+              <span className="icon">⚙️</span>
+              <span className="text">Tenants</span>
+            </Link>
+          </li>
         </ul>
       </nav>
     </div>
   );
-} 
+}

@@ -45,6 +45,10 @@ app.get('/', (req, res) => {
 const painelRouter = require('./routes/painel');
 app.use('/api/painel', painelRouter);
 
+// Tenants management
+const tenantRouter = require('./routes/tenants');
+app.use('/api/tenants', tenantRouter);
+
 // Rota de webhook para receber mensagens do Z-API
 app.post('/webhook', webhookLimiter, async (req, res) => {
   try {

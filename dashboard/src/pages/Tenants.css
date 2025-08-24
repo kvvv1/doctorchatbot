@@ -1,0 +1,19 @@
+.tenants-page {
+  padding: 20px;
+}
+
+.tenant-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tenant-form input {
+  padding: 5px;
+}
+
+.tenant-list li {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
