@@ -1,5 +1,6 @@
 const { flowController } = require('../services/flowController');
 const zapiService = require('../services/zapiService');
+const tenantConfig = require('../config/tenantConfig');
 
 exports.handleIncomingMessage = async (req, res) => {
   try {
@@ -13,7 +14,7 @@ exports.handleIncomingMessage = async (req, res) => {
     }
 
     // Processa o fluxo da conversa usando o flowController
-    const resposta = await flowController(userMessage, userPhone);
+    const resposta = await flowController(tenantConfig, userMessage, userPhone);
 
     // Envia mensagem ao usuário
     await zapiService.sendMessage(userPhone, resposta);

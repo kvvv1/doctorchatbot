@@ -7,6 +7,7 @@ require('dotenv').config();
 const { flowController } = require('./services/flowController');
 const zapiService = require('./services/zapiService');
 const { supabase } = require('./services/supabaseClient');
+const tenantConfig = require('./config/tenantConfig');
 const LOG_MESSAGES = process.env.LOG_MESSAGES || 'key';
 
 const app = express();
@@ -33,7 +34,7 @@ const webhookLimiter = rateLimit({
 // Rota de teste
 app.get('/', (req, res) => {
   res.json({
-    message: 'WhatsApp Chatbot - Clínica Nassif',
+    message: `WhatsApp Chatbot - ${tenantConfig.clinicName}`,
     status: 'online',
     timestamp: new Date().toISOString()
   });
@@ -118,7 +119,7 @@ app.post('/webhook', webhookLimiter, async (req, res) => {
     }
 
     // Processa o fluxo da conversa usando o flowController
-    const resposta = await flowController(userMessage, userPhone);
+    const resposta = await flowController(tenantConfig, userMessage, userPhone);
 
     // Se o fluxo decidir não responder (null/undefined/empty), não enviar mensagem
     if (!resposta) {
@@ -156,7 +157,7 @@ app.get('/test', async (req, res) => {
     const testPhone = '5511999999999';
     
     console.log('🧪 Testando o sistema...');
-    const resposta = await flowController(testMessage, testPhone);
+    const resposta = await flowController(tenantConfig, testMessage, testPhone);
     
     res.json({
       success: true,
@@ -202,7 +203,7 @@ app.post('/test-webhook', async (req, res) => {
       });
     }
     
-    const resposta = await flowController(userMessage, userPhone);
+    const resposta = await flowController(tenantConfig, userMessage, userPhone);
     
     res.json({
       success: true,

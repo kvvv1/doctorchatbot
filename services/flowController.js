@@ -8,6 +8,34 @@ const gestaodsService = require('./gestaodsService');
 const { cadastrarPacienteNoGestao } = require('./apiGestaoService');
 const { isValidCPF, formatCPF } = require('../utils/validations');
 
+// Configurações do tenant (nome da clínica, horários, etc.)
+let tenant = {
+  clinicName: 'Clínica Nassif',
+  businessHours: {
+    weekday: { start: 8, end: 18 },
+    saturday: { start: 8, end: 12 }
+  },
+  secretary: {
+    phone: '+55 31 98600-3666',
+    email: 'contato@gabrielanassif.com'
+  }
+};
+
+function setTenantConfig(config = {}) {
+  tenant = {
+    ...tenant,
+    ...config,
+    businessHours: {
+      ...tenant.businessHours,
+      ...(config.businessHours || {})
+    },
+    secretary: {
+      ...tenant.secretary,
+      ...(config.secretary || {})
+    }
+  };
+}
+
 // ✅ Funções auxiliares para gerenciamento de estado e contexto
 async function salvarEstado(userPhone, estado) {
   try {
@@ -233,13 +261,14 @@ function calcularTipoConsulta(ultimaDataConsulta) {
 function obterSaudacao() {
   const agora = new Date();
   const hora = agora.getHours();
-  
+  const nomeClinica = tenant.clinicName || 'sua clínica';
+
   if (hora >= 6 && hora < 12) {
-    return "🌅 Bom dia! Bem-vindo(a) à Clínica Nassif! 🏥";
+    return `🌅 Bom dia! Bem-vindo(a) à ${nomeClinica}! 🏥`;
   } else if (hora >= 12 && hora < 18) {
-    return "☀️ Boa tarde! Bem-vindo(a) à Clínica Nassif! 🏥";
+    return `☀️ Boa tarde! Bem-vindo(a) à ${nomeClinica}! 🏥`;
   } else {
-    return "🌙 Boa noite! Bem-vindo(a) à Clínica Nassif! 🏥";
+    return `🌙 Boa noite! Bem-vindo(a) à ${nomeClinica}! 🏥`;
   }
 }
 
@@ -394,14 +423,34 @@ function verificarHorarioAtendimento() {
   const currentHour = now.getHours();
   const currentDay = now.getDay(); // 0 = Domingo, 6 = Sábado
 
-  const isWeekday = currentDay >= 1 && currentDay <= 5; // Segunda a Sexta
+  const { weekday, saturday } = tenant.businessHours || {};
+  const isWeekday = currentDay >= 1 && currentDay <= 5;
   const isSaturday = currentDay === 6;
 
-  const isBusinessHours = 
-    (isWeekday && currentHour >= 8 && currentHour < 18) || 
-    (isSaturday && currentHour >= 8 && currentHour < 12);
+  const dentroSemana =
+    isWeekday &&
+    currentHour >= (weekday?.start ?? 0) &&
+    currentHour < (weekday?.end ?? 24);
 
-  return isBusinessHours;
+  const dentroSabado =
+    isSaturday &&
+    saturday &&
+    currentHour >= (saturday.start ?? 0) &&
+    currentHour < (saturday.end ?? 24);
+
+  return dentroSemana || dentroSabado;
+}
+
+function formatHorarioAtendimento() {
+  const { weekday, saturday } = tenant.businessHours || {};
+  let texto = '';
+  if (weekday) {
+    texto += `Segunda a Sexta, das ${weekday.start}h às ${weekday.end}h`;
+  }
+  if (saturday) {
+    texto += `\nSábado, das ${saturday.start}h às ${saturday.end}h`;
+  }
+  return texto;
 }
 
 // ✅ Função para definir estado do usuário
@@ -614,8 +663,7 @@ async function handleAguardandoNome(phone, message) {
         `✅ Nome registrado: *${context.nome}*\n\n` +
         "🕐 *A clínica está fora do horário de atendimento.*\n\n" +
         "📅 *Horário de Atendimento:*\n" +
-        "Segunda a Sexta, das 8h às 18h\n" +
-        "Sábado, das 8h às 12h\n\n" +
+        `${formatHorarioAtendimento()}\n\n` +
         "Entraremos em contato assim que o atendimento for retomado."
       );
     } else {
@@ -1079,9 +1127,9 @@ async function handleConfirmandoCadastro(phone, message) {
           "📞 *Redirecionando para secretária*\n\n" +
           "Uma secretária irá ajudá-lo com o cadastro.\n\n" +
           "👩‍💼 *Secretária*\n\n" +
-          "☎️ Telefone: +55 31 98600-3666\n" +
-          "📧 Email: contato@gabrielanassif.com\n" +
-          "🕐 Horário: Segunda a Sexta, 8h às 18h\n\n" +
+          `☎️ Telefone: ${tenant.secretary.phone}\n` +
+          `📧 Email: ${tenant.secretary.email}\n` +
+          `🕐 Horário: Segunda a Sexta, ${tenant.businessHours.weekday.start}h às ${tenant.businessHours.weekday.end}h\n\n` +
           "Digite *1* para voltar ao menu principal."
         );
       }
@@ -1208,7 +1256,7 @@ async function handleConfirmandoPaciente(phone, message) {
           return (
             "❌ *Cancelamento de Consulta*\n\n" +
             "Por favor, entre em contato com a recepção.\n" +
-            "Telefone: +55 31 98600-3666\n\n" +
+            `Telefone: ${tenant.secretary.phone}\n\n` +
             "Digite *menu* para voltar ao início."
           );
 
@@ -1267,9 +1315,9 @@ function handleAtendimentoHumano(phone, message) {
   } else {
     return (
       "👩‍💼 *Secretária*\n\n" +
-      "☎️ Telefone: +55 31 98600-3666\n" +
-      "📧 Email: contato@gabrielanassif.com\n" +
-      "🕐 Horário: Segunda a Sexta, 8h às 18h\n\n" +
+      `☎️ Telefone: ${tenant.secretary.phone}\n` +
+      `📧 Email: ${tenant.secretary.email}\n` +
+      `🕐 Horário: Segunda a Sexta, ${tenant.businessHours.weekday.start}h às ${tenant.businessHours.weekday.end}h\n\n` +
       "Digite *1* para voltar ao menu principal."
     );
   }
@@ -1552,7 +1600,10 @@ function handleEstadoFinal(phone, message) {
 }
 
 // 🧠 Função principal do flowController
-async function flowController(message, phone) {
+async function flowController(tenantConfig, userMessage, userPhone) {
+  setTenantConfig(tenantConfig);
+  const message = userMessage;
+  const phone = userPhone;
   const state = getState(phone);
   console.log(`🧠 Processando mensagem do usuário ${phone} no estado: ${state}`);
   try { await logMessageToSupabase(phone, 'in', message); } catch {}
@@ -1684,9 +1735,9 @@ async function flowController(message, phone) {
           "📞 *Redirecionando para secretária*\n\n" +
           "Uma secretária irá ajudá-lo com o cadastro.\n\n" +
           "👩‍💼 *Secretária*\n\n" +
-          "☎️ Telefone: +55 31 98600-3666\n" +
-          "📧 Email: contato@gabrielanassif.com\n" +
-          "🕐 Horário: Segunda a Sexta, 8h às 18h\n\n" +
+          `☎️ Telefone: ${tenant.secretary.phone}\n` +
+          `📧 Email: ${tenant.secretary.email}\n` +
+          `🕐 Horário: Segunda a Sexta, ${tenant.businessHours.weekday.start}h às ${tenant.businessHours.weekday.end}h\n\n` +
           "Digite *1* para voltar ao menu principal."
         );
       }
