@@ -134,6 +134,19 @@ CREATE TABLE notifications (
 );
 ```
 
+### 9. Tabela `tenants`
+```sql
+CREATE TABLE tenants (
+  id BIGSERIAL PRIMARY KEY,
+  name VARCHAR(100) UNIQUE NOT NULL,
+  zapi_api_key VARCHAR(255),
+  zapi_instance_id VARCHAR(255),
+  gestaods_token VARCHAR(255),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
 ## 🔐 Configuração de Políticas RLS (Row Level Security)
 
 Para desenvolvimento, você pode desabilitar o RLS temporariamente:
@@ -148,6 +161,7 @@ ALTER TABLE secretary_tickets DISABLE ROW LEVEL SECURITY;
 ALTER TABLE patients DISABLE ROW LEVEL SECURITY;
 ALTER TABLE messages DISABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications DISABLE ROW LEVEL SECURITY;
+ALTER TABLE tenants DISABLE ROW LEVEL SECURITY;
 ```
 
 ## 🧪 Testando a Configuração

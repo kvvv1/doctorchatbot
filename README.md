@@ -79,6 +79,12 @@ whatsapp-chatbot/
 2. Obtenha sua API Key e Company ID
 3. Configure as variáveis de ambiente
 
+## 🏢 Cadastro de Tenants
+
+1. Edite o arquivo `tenants.json` na raiz do projeto com as credenciais de cada tenant.
+2. Execute `node scripts/migrate-tenants.js` para inserir ou atualizar os registros no Supabase.
+3. Para adicionar novos tenants no futuro, repita o processo e rode novamente o script.
+
 ## 📅 Sistema de Agendamentos
 
 ### Visualização de Agendamentos
