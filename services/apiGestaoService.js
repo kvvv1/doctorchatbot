@@ -1,8 +1,8 @@
 const axios = require('axios');
-require('dotenv').config();
 
 /**
  * Cadastra um novo paciente no sistema GestãoDS
+ * @param {Object} tenantConfig - Configurações do tenant
  * @param {Object} paciente - Dados do paciente
  * @param {string} paciente.nome_completo - Nome completo do paciente
  * @param {string} paciente.cpf - CPF do paciente (apenas números)
@@ -10,16 +10,18 @@ require('dotenv').config();
  * @param {string} paciente.celular - Celular do paciente (apenas números)
  * @returns {Object} Resultado da operação
  */
-async function cadastrarPacienteNoGestao(paciente) {
+async function cadastrarPacienteNoGestao(tenantConfig, paciente) {
   try {
     console.log(`[API GestaODS] Tentando cadastrar paciente: ${paciente.nome_completo} (CPF: ${paciente.cpf})`);
-    const token = process.env.GESTAODS_TOKEN;
+    const token = tenantConfig.gestaodsToken;
     if (!token) {
-      console.warn('[API GestaODS] GESTAODS_TOKEN não configurado no ambiente');
+      console.warn('[API GestaODS] GESTAODS_TOKEN não configurado no tenantConfig');
       return { sucesso: false, mensagem: 'Token de integração não configurado' };
     }
 
-    const response = await axios.post('https://apidev.gestaods.com.br/api/paciente/cadastrar/', {
+    const baseUrl = tenantConfig.gestaodsBaseUrl || 'https://apidev.gestaods.com.br';
+
+    const response = await axios.post(`${baseUrl}/api/paciente/cadastrar/`, {
       nome_completo: paciente.nome_completo,
       cpf: paciente.cpf,
       email: paciente.email,
@@ -33,7 +35,7 @@ async function cadastrarPacienteNoGestao(paciente) {
     });
 
     console.log(`[API GestaODS] Paciente cadastrado com sucesso:`, response.data);
-    
+
     if (response.status === 201) {
       return { sucesso: true };
     } else {
@@ -50,4 +52,5 @@ async function cadastrarPacienteNoGestao(paciente) {
 
 module.exports = {
   cadastrarPacienteNoGestao
-}; 
+};
+

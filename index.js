@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
+const tenantConfig = require('./tenantConfig');
 
 const { flowController } = require('./services/flowController');
 const zapiService = require('./services/zapiService');
@@ -118,7 +119,7 @@ app.post('/webhook', webhookLimiter, async (req, res) => {
     }
 
     // Processa o fluxo da conversa usando o flowController
-    const resposta = await flowController(userMessage, userPhone);
+    const resposta = await flowController(tenantConfig, userMessage, userPhone);
 
     // Se o fluxo decidir não responder (null/undefined/empty), não enviar mensagem
     if (!resposta) {
@@ -129,7 +130,7 @@ app.post('/webhook', webhookLimiter, async (req, res) => {
     console.log(`📤 Enviando resposta para ${userPhone}:`, resposta);
 
     // Envia a resposta via Z-API
-    await zapiService.sendMessage(userPhone, resposta);
+    await zapiService.sendMessage(tenantConfig, userPhone, resposta);
 
     // Log saída (somente se habilitado)
     if (LOG_MESSAGES === 'all') {
@@ -156,7 +157,7 @@ app.get('/test', async (req, res) => {
     const testPhone = '5511999999999';
     
     console.log('🧪 Testando o sistema...');
-    const resposta = await flowController(testMessage, testPhone);
+    const resposta = await flowController(tenantConfig, testMessage, testPhone);
     
     res.json({
       success: true,
@@ -202,7 +203,7 @@ app.post('/test-webhook', async (req, res) => {
       });
     }
     
-    const resposta = await flowController(userMessage, userPhone);
+    const resposta = await flowController(tenantConfig, userMessage, userPhone);
     
     res.json({
       success: true,
@@ -224,7 +225,7 @@ app.post('/test-webhook', async (req, res) => {
 // Rota para verificar status do Z-API
 app.get('/status', async (req, res) => {
   try {
-    const status = await zapiService.getStatus();
+    const status = await zapiService.getStatus(tenantConfig);
     res.json({
       success: true,
       status,

@@ -269,9 +269,9 @@ function validarContextoAgendamento(context) {
 }
 
 // 🔍 Função para buscar datas disponíveis de forma segura
-async function buscarDatasDisponiveis(token) {
+async function buscarDatasDisponiveis(tenantConfig) {
   try {
-    const diasResponse = await gestaodsService.buscarDiasDisponiveis(token);
+    const diasResponse = await gestaodsService.buscarDiasDisponiveis(tenantConfig);
 
     const dias = Array.isArray(diasResponse?.data)
       ? diasResponse.data
@@ -294,9 +294,9 @@ async function buscarDatasDisponiveis(token) {
 }
 
 // 🕐 Função para buscar horários disponíveis de forma segura
-async function buscarHorariosDisponiveis(token, dataSelecionada) {
+async function buscarHorariosDisponiveis(tenantConfig, dataSelecionada) {
   try {
-    const horariosResponse = await gestaodsService.buscarHorariosDisponiveis(token, dataSelecionada);
+    const horariosResponse = await gestaodsService.buscarHorariosDisponiveis(tenantConfig, dataSelecionada);
 
     let horarios = Array.isArray(horariosResponse?.data)
       ? horariosResponse.data
@@ -421,7 +421,7 @@ function normalizeName(name) {
     .replace(/\s+/g, ' ');
 }
 
-async function visualizarAgendamentosPorNome(nomePaciente, userPhone) {
+async function visualizarAgendamentosPorNome(tenantConfig, nomePaciente, userPhone) {
   try {
     const hoje = new Date();
     const dataInicial = hoje.toLocaleDateString('pt-BR'); // ex: 04/08/2025
@@ -430,8 +430,9 @@ async function visualizarAgendamentosPorNome(nomePaciente, userPhone) {
     dataFinal.setMonth(dataFinal.getMonth() + 3);
     const dataFinalFormatada = dataFinal.toLocaleDateString('pt-BR'); // ex: 04/11/2025
 
-    const tokenListagem = process.env.GESTAODS_TOKEN;
-    const url = `https://apidev.gestaods.com.br/api/dados-agendamento/listagem/${tokenListagem}`;
+    const tokenListagem = tenantConfig.gestaodsToken;
+    const baseUrl = tenantConfig.gestaodsBaseUrl || 'https://apidev.gestaods.com.br';
+    const url = `${baseUrl}/api/dados-agendamento/listagem/${tokenListagem}`;
 
     console.log('[VisualizarAgendamentosPorNome] Chamando API:', url, {
       data_inicial: dataInicial,
@@ -813,8 +814,7 @@ async function handleAguardandoCpf(phone, message) {
     upsertPatient({ cpf: message, name: context.nome, phone, email: context.email });
 
     // Busca o paciente usando o gestaodsService
-    const token = process.env.GESTAODS_TOKEN;
-    const paciente = await gestaodsService.verificarPaciente(token, message);
+    const paciente = await gestaodsService.verificarPaciente(tenantConfig, message);
 
     if (!paciente) {
       setState(phone, 'aguardando_nome');
@@ -1001,7 +1001,7 @@ async function handleConfirmandoCadastro(phone, message) {
       try {
         console.log(`[FLOW] Tentando cadastrar paciente: ${context.nome} (CPF: ${context.cpf})`);
         
-        const resultadoCadastro = await cadastrarPacienteNoGestao({
+        const resultadoCadastro = await cadastrarPacienteNoGestao(tenantConfig, {
           nome_completo: context.nome,
           cpf: context.cpf,
           email: context.email,
@@ -1141,7 +1141,7 @@ async function handleConfirmandoPaciente(phone, message) {
       return '❗ Por favor, digite um nome válido com pelo menos 3 letras.';
     }
 
-    const mensagem = await visualizarAgendamentosPorNome(nome, phone);
+    const mensagem = await visualizarAgendamentosPorNome(tenantConfig, nome, phone);
 
     if (mensagem.includes('📭 Você não possui agendamentos')) {
       setState(phone, 'finalizado');
@@ -1167,12 +1167,12 @@ async function handleConfirmandoPaciente(phone, message) {
           try {
             // Adiciona o token ao contexto se não existir
             if (!context.token) {
-              context.token = process.env.GESTAODS_TOKEN;
+              context.token = tenantConfig.gestaodsToken;
               setContext(phone, context);
             }
 
             // Consulta à API oficial usando função segura
-            const dias = await buscarDatasDisponiveis(context.token);
+            const dias = await buscarDatasDisponiveis(tenantConfig);
 
             if (!dias || dias.length === 0) {
               return (
@@ -1307,7 +1307,7 @@ async function handleConfirmandoAgendamento(phone, message) {
         console.log("[FlowController] Verificação: data_fim_agendamento deve ser 20 minutos após data_agendamento");
 
         // Chamada para a API (lança erro se falhar)
-        await gestaodsService.agendarConsulta(payload);
+        await gestaodsService.agendarConsulta(tenantConfig, payload);
 
         // Registrar aprovação automática na dashboard (opção B)
         console.log(`[FLOW] Tentando registrar agendamento na dashboard...`);
@@ -1427,7 +1427,7 @@ async function handleEscolhendoData(phone, message) {
 
   try {
     // Consulta à API oficial usando função segura
-    const horarios = await buscarHorariosDisponiveis(context.token, dataSelecionada);
+    const horarios = await buscarHorariosDisponiveis(tenantConfig, dataSelecionada);
 
     if (!horarios || horarios.length === 0) {
       return (
@@ -1552,7 +1552,7 @@ function handleEstadoFinal(phone, message) {
 }
 
 // 🧠 Função principal do flowController
-async function flowController(message, phone) {
+async function flowController(tenantConfig, message, phone) {
   const state = getState(phone);
   console.log(`🧠 Processando mensagem do usuário ${phone} no estado: ${state}`);
   try { await logMessageToSupabase(phone, 'in', message); } catch {}
@@ -1825,7 +1825,7 @@ async function flowController(message, phone) {
 
 // ✅ FlowController Corrigido
 const FlowController = {
-  async agendarConsulta(context) {
+  async agendarConsulta(tenantConfig, context) {
     try {
       // Validar se o contexto está completo
       if (!context?.token || !context?.cpf || !context?.dataSelecionada || !context?.horaSelecionada) {
@@ -1851,7 +1851,7 @@ const FlowController = {
       console.log("[FlowController] Verificação: data_fim_agendamento deve ser 20 minutos após data_agendamento");
 
       // Chamada para a API
-      const resposta = await gestaodsService.agendarConsulta(payload);
+      const resposta = await gestaodsService.agendarConsulta(tenantConfig, payload);
 
       if (resposta?.status === 200 || resposta?.status === 201) {
         console.log("[FlowController] Consulta agendada com sucesso:", resposta.data);
@@ -2135,9 +2135,9 @@ async function handleOpcaoReagendarCancelar(phone, message) {
 
 
 // 📋 Função modificada para listar agendamentos com opção de edição
-async function listarAgendamentosPorCPFComEdicao(context, phone) {
+async function listarAgendamentosPorCPFComEdicao(tenantConfig, context, phone) {
   try {
-    const token = context.token || process.env.GESTAODS_TOKEN;
+    const token = context.token || tenantConfig.gestaodsToken;
     const cpf = context.cpf;
 
     if (!token || !cpf) {
@@ -2154,7 +2154,8 @@ async function listarAgendamentosPorCPFComEdicao(context, phone) {
     const dataInicial = moment().subtract(1, 'year').format('DD/MM/YYYY');
     const dataFinal = moment().add(1, 'year').format('DD/MM/YYYY');
 
-    const url = `https://apidev.gestaods.com.br/api/dados-agendamento/listagem/${token}`;
+    const baseUrl = tenantConfig.gestaodsBaseUrl || 'https://apidev.gestaods.com.br';
+    const url = `${baseUrl}/api/dados-agendamento/listagem/${token}`;
 
     console.log(`[listarAgendamentosPorCPFComEdicao] URL: ${url}`);
     console.log(`[listarAgendamentosPorCPFComEdicao] Parâmetros: data_inicial=${dataInicial}, data_final=${dataFinal}`);
