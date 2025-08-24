@@ -421,7 +421,7 @@ function normalizeName(name) {
     .replace(/\s+/g, ' ');
 }
 
-async function visualizarAgendamentosPorNome(nomePaciente, userPhone) {
+async function visualizarAgendamentosPorNome(nomePaciente, userPhone, gestaodsToken) {
   try {
     const hoje = new Date();
     const dataInicial = hoje.toLocaleDateString('pt-BR'); // ex: 04/08/2025
@@ -430,7 +430,7 @@ async function visualizarAgendamentosPorNome(nomePaciente, userPhone) {
     dataFinal.setMonth(dataFinal.getMonth() + 3);
     const dataFinalFormatada = dataFinal.toLocaleDateString('pt-BR'); // ex: 04/11/2025
 
-    const tokenListagem = process.env.GESTAODS_TOKEN;
+    const tokenListagem = gestaodsToken;
     const url = `https://apidev.gestaods.com.br/api/dados-agendamento/listagem/${tokenListagem}`;
 
     console.log('[VisualizarAgendamentosPorNome] Chamando API:', url, {
@@ -813,7 +813,7 @@ async function handleAguardandoCpf(phone, message) {
     upsertPatient({ cpf: message, name: context.nome, phone, email: context.email });
 
     // Busca o paciente usando o gestaodsService
-    const token = process.env.GESTAODS_TOKEN;
+    const token = gestaodsToken;
     const paciente = await gestaodsService.verificarPaciente(token, message);
 
     if (!paciente) {
@@ -1006,7 +1006,7 @@ async function handleConfirmandoCadastro(phone, message) {
           cpf: context.cpf,
           email: context.email,
           celular: context.celular
-        });
+        }, gestaodsToken);
 
         if (resultadoCadastro.sucesso) {
           console.log(`[FLOW] Paciente cadastrado com sucesso na API: ${context.nome}`);
@@ -1141,7 +1141,7 @@ async function handleConfirmandoPaciente(phone, message) {
       return '❗ Por favor, digite um nome válido com pelo menos 3 letras.';
     }
 
-    const mensagem = await visualizarAgendamentosPorNome(nome, phone);
+    const mensagem = await visualizarAgendamentosPorNome(nome, phone, gestaodsToken);
 
     if (mensagem.includes('📭 Você não possui agendamentos')) {
       setState(phone, 'finalizado');
@@ -1167,7 +1167,7 @@ async function handleConfirmandoPaciente(phone, message) {
           try {
             // Adiciona o token ao contexto se não existir
             if (!context.token) {
-              context.token = process.env.GESTAODS_TOKEN;
+              context.token = gestaodsToken;
               setContext(phone, context);
             }
 
@@ -1552,7 +1552,8 @@ function handleEstadoFinal(phone, message) {
 }
 
 // 🧠 Função principal do flowController
-async function flowController(message, phone) {
+async function flowController(message, phone, tenantConfig = {}) {
+  const { gestaodsToken } = tenantConfig;
   const state = getState(phone);
   console.log(`🧠 Processando mensagem do usuário ${phone} no estado: ${state}`);
   try { await logMessageToSupabase(phone, 'in', message); } catch {}
@@ -2135,9 +2136,9 @@ async function handleOpcaoReagendarCancelar(phone, message) {
 
 
 // 📋 Função modificada para listar agendamentos com opção de edição
-async function listarAgendamentosPorCPFComEdicao(context, phone) {
+async function listarAgendamentosPorCPFComEdicao(context, phone, gestaodsToken) {
   try {
-    const token = context.token || process.env.GESTAODS_TOKEN;
+    const token = context.token || gestaodsToken;
     const cpf = context.cpf;
 
     if (!token || !cpf) {

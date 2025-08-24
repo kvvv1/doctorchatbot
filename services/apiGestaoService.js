@@ -1,5 +1,4 @@
 const axios = require('axios');
-require('dotenv').config();
 
 /**
  * Cadastra um novo paciente no sistema GestãoDS
@@ -10,12 +9,12 @@ require('dotenv').config();
  * @param {string} paciente.celular - Celular do paciente (apenas números)
  * @returns {Object} Resultado da operação
  */
-async function cadastrarPacienteNoGestao(paciente) {
+async function cadastrarPacienteNoGestao(paciente, gestaodsToken) {
   try {
     console.log(`[API GestaODS] Tentando cadastrar paciente: ${paciente.nome_completo} (CPF: ${paciente.cpf})`);
-    const token = process.env.GESTAODS_TOKEN;
+    const token = gestaodsToken;
     if (!token) {
-      console.warn('[API GestaODS] GESTAODS_TOKEN não configurado no ambiente');
+      console.warn('[API GestaODS] Token do GestãoDS não fornecido');
       return { sucesso: false, mensagem: 'Token de integração não configurado' };
     }
 
