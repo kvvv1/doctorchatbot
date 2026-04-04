@@ -9,6 +9,7 @@ import Espera from './pages/Espera';
 import Secretaria from './pages/Secretaria';
 import Pacientes from './pages/Pacientes';
 import './App.css';
+import Tenants from './pages/Tenants';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
               <Route path="/espera" element={<Espera />} />
               <Route path="/secretaria" element={<Secretaria />} />
               <Route path="/pacientes" element={<Pacientes />} />
+              <Route path="/tenants" element={<Tenants />} />
             </Routes>
           </div>
         </div>
