@@ -134,6 +134,22 @@ CREATE TABLE notifications (
 );
 ```
 
+### 9. Tabela `tenants`
+Armazena credenciais e metadados para cada clínica/tenant.
+```sql
+CREATE TABLE tenants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(200) NOT NULL,
+  zapi_instance_id VARCHAR(100),
+  zapi_token VARCHAR(255),
+  zapi_client_token VARCHAR(255),
+  gestaods_token VARCHAR(255),
+  dashboard_api_key VARCHAR(255),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
 ## 🔐 Configuração de Políticas RLS (Row Level Security)
 
 Para desenvolvimento, você pode desabilitar o RLS temporariamente:

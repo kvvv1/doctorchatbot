@@ -10,13 +10,14 @@ async function checkTables() {
   
   const requiredTables = [
     'appointment_requests',
-    'reschedule_requests', 
+    'reschedule_requests',
     'cancel_requests',
     'waitlist',
     'secretary_tickets',
     'patients',
     'messages',
-    'notifications'
+    'notifications',
+    'tenants'
   ];
   
   for (const tableName of requiredTables) {
