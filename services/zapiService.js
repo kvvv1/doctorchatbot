@@ -1,12 +1,10 @@
 const axios = require('axios');
-require('dotenv').config();
 
-const { ZAPI_INSTANCE_ID, ZAPI_TOKEN, ZAPI_CLIENT_TOKEN } = process.env;
-
-async function sendMessage(phone, message) {
+async function sendMessage(tenantConfig, phone, message) {
   try {
+    const { zapiInstanceId, zapiToken, zapiClientToken } = tenantConfig;
     // Formato correto da API Z-API
-    const url = `https://api.z-api.io/instances/${ZAPI_INSTANCE_ID}/token/${ZAPI_TOKEN}/send-text`;
+    const url = `https://api.z-api.io/instances/${zapiInstanceId}/token/${zapiToken}/send-text`;
 
     const payload = {
       phone: phone,
@@ -19,7 +17,7 @@ async function sendMessage(phone, message) {
     const response = await axios.post(url, payload, {
       headers: {
         'Content-Type': 'application/json',
-        'Client-Token': ZAPI_CLIENT_TOKEN
+        'Client-Token': zapiClientToken
       }
     });
 
@@ -33,15 +31,16 @@ async function sendMessage(phone, message) {
   }
 }
 
-async function getStatus() {
+async function getStatus(tenantConfig) {
   try {
-    const url = `https://api.z-api.io/instances/${ZAPI_INSTANCE_ID}/token/${ZAPI_TOKEN}/status`;
+    const { zapiInstanceId, zapiToken, zapiClientToken } = tenantConfig;
+    const url = `https://api.z-api.io/instances/${zapiInstanceId}/token/${zapiToken}/status`;
     const response = await axios.get(url, {
       headers: {
-        'Client-Token': ZAPI_CLIENT_TOKEN
+        'Client-Token': zapiClientToken
       }
     });
-    
+
     console.log('[Z-API] Status verificado');
     return response.data;
   } catch (error) {
@@ -50,4 +49,5 @@ async function getStatus() {
   }
 }
 
-module.exports = { sendMessage, getStatus }; 
+module.exports = { sendMessage, getStatus };
+

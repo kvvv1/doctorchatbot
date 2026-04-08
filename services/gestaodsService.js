@@ -1,11 +1,12 @@
 const axios = require('axios');
-require('dotenv').config();
 
-const BASE_URL = 'https://apidev.gestaods.com.br';
+const DEFAULT_BASE_URL = 'https://apidev.gestaods.com.br';
 
-async function verificarPaciente(token, cpf) {
+async function verificarPaciente(tenantConfig, cpf) {
   try {
-    const url = `${BASE_URL}/api/paciente/${token}/${cpf}/`;
+    const baseUrl = tenantConfig.gestaodsBaseUrl || DEFAULT_BASE_URL;
+    const token = tenantConfig.gestaodsToken;
+    const url = `${baseUrl}/api/paciente/${token}/${cpf}/`;
     const response = await axios.get(url);
     return response.data;
   } catch (error) {
@@ -16,9 +17,11 @@ async function verificarPaciente(token, cpf) {
   }
 }
 
-async function buscarDiasDisponiveis(token) {
+async function buscarDiasDisponiveis(tenantConfig) {
   try {
-    const url = `${BASE_URL}/api/agendamento/dias-disponiveis/${token}`;
+    const baseUrl = tenantConfig.gestaodsBaseUrl || DEFAULT_BASE_URL;
+    const token = tenantConfig.gestaodsToken;
+    const url = `${baseUrl}/api/agendamento/dias-disponiveis/${token}`;
     const response = await axios.get(url);
     return response.data;
   } catch (error) {
@@ -27,9 +30,11 @@ async function buscarDiasDisponiveis(token) {
   }
 }
 
-async function buscarHorariosDisponiveis(token, data) {
+async function buscarHorariosDisponiveis(tenantConfig, data) {
   try {
-    const url = `${BASE_URL}/api/agendamento/horarios-disponiveis/${token}?data=${data}`;
+    const baseUrl = tenantConfig.gestaodsBaseUrl || DEFAULT_BASE_URL;
+    const token = tenantConfig.gestaodsToken;
+    const url = `${baseUrl}/api/agendamento/horarios-disponiveis/${token}?data=${data}`;
     const response = await axios.get(url);
     return response.data;
   } catch (error) {
@@ -38,9 +43,10 @@ async function buscarHorariosDisponiveis(token, data) {
   }
 }
 
-async function agendarConsulta(payload) {
+async function agendarConsulta(tenantConfig, payload) {
   try {
-    const url = `${BASE_URL}/api/agendamento/agendar/`;
+    const baseUrl = tenantConfig.gestaodsBaseUrl || DEFAULT_BASE_URL;
+    const url = `${baseUrl}/api/agendamento/agendar/`;
 
     // ✅ Validação dos campos obrigatórios
     if (!payload.token) {
@@ -56,14 +62,14 @@ async function agendarConsulta(payload) {
       throw new Error('Data de fim do agendamento é obrigatória');
     }
 
-    console.log('[GestãoDS] Enviando dados de agendamento:', JSON.stringify(payload, null, 2)); // ✅ debug útil
+    console.log('[GestãoDS] Enviando dados de agendamento:', JSON.stringify(payload, null, 2));
 
     const response = await axios.post(url, payload, {
       headers: {
         'Content-Type': 'application/json'
       }
     });
-    
+
     if (response.status === 201) {
       console.log('[GestãoDS] Agendamento realizado com sucesso');
       return response.data;
@@ -88,4 +94,5 @@ module.exports = {
   buscarDiasDisponiveis,
   buscarHorariosDisponiveis,
   agendarConsulta
-}; 
+};
+
