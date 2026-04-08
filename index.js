@@ -9,6 +9,12 @@ const zapiService = require('./services/zapiService');
 const { supabase } = require('./services/supabaseClient');
 const LOG_MESSAGES = process.env.LOG_MESSAGES || 'key';
 
+const tenantConfig = {
+  instanceId: process.env.ZAPI_INSTANCE_ID,
+  token: process.env.ZAPI_TOKEN,
+  clientToken: process.env.ZAPI_CLIENT_TOKEN
+};
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -129,7 +135,7 @@ app.post('/webhook', webhookLimiter, async (req, res) => {
     console.log(`📤 Enviando resposta para ${userPhone}:`, resposta);
 
     // Envia a resposta via Z-API
-    await zapiService.sendMessage(userPhone, resposta);
+      await zapiService.sendMessage(tenantConfig, userPhone, resposta);
 
     // Log saída (somente se habilitado)
     if (LOG_MESSAGES === 'all') {

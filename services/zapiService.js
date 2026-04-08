@@ -3,10 +3,12 @@ require('dotenv').config();
 
 const { ZAPI_INSTANCE_ID, ZAPI_TOKEN, ZAPI_CLIENT_TOKEN } = process.env;
 
-async function sendMessage(phone, message) {
+async function sendMessage(tenantConfig, phone, message) {
   try {
+    const { instanceId, token, clientToken } = tenantConfig;
+
     // Formato correto da API Z-API
-    const url = `https://api.z-api.io/instances/${ZAPI_INSTANCE_ID}/token/${ZAPI_TOKEN}/send-text`;
+    const url = `https://api.z-api.io/instances/${instanceId}/token/${token}/send-text`;
 
     const payload = {
       phone: phone,
@@ -19,7 +21,7 @@ async function sendMessage(phone, message) {
     const response = await axios.post(url, payload, {
       headers: {
         'Content-Type': 'application/json',
-        'Client-Token': ZAPI_CLIENT_TOKEN
+        'Client-Token': clientToken
       }
     });
 
@@ -49,5 +51,4 @@ async function getStatus() {
     throw new Error('Falha ao verificar status do Z-API');
   }
 }
-
-module.exports = { sendMessage, getStatus }; 
+module.exports = { sendMessage, getStatus };
