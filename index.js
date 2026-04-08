@@ -8,6 +8,7 @@ const { flowController } = require('./services/flowController');
 const zapiService = require('./services/zapiService');
 const { supabase } = require('./services/supabaseClient');
 const LOG_MESSAGES = process.env.LOG_MESSAGES || 'key';
+const TENANT_CONFIG = { gestaodsToken: process.env.GESTAODS_TOKEN };
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -118,7 +119,7 @@ app.post('/webhook', webhookLimiter, async (req, res) => {
     }
 
     // Processa o fluxo da conversa usando o flowController
-    const resposta = await flowController(userMessage, userPhone);
+    const resposta = await flowController(userMessage, userPhone, TENANT_CONFIG);
 
     // Se o fluxo decidir não responder (null/undefined/empty), não enviar mensagem
     if (!resposta) {
@@ -156,7 +157,7 @@ app.get('/test', async (req, res) => {
     const testPhone = '5511999999999';
     
     console.log('🧪 Testando o sistema...');
-    const resposta = await flowController(testMessage, testPhone);
+    const resposta = await flowController(testMessage, testPhone, TENANT_CONFIG);
     
     res.json({
       success: true,
@@ -202,7 +203,7 @@ app.post('/test-webhook', async (req, res) => {
       });
     }
     
-    const resposta = await flowController(userMessage, userPhone);
+    const resposta = await flowController(userMessage, userPhone, TENANT_CONFIG);
     
     res.json({
       success: true,

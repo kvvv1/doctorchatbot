@@ -1,9 +1,9 @@
 // utils/buscarPaciente.js
 const axios = require('axios');
-require('dotenv').config();
 
-async function buscarPacientePorCPF(cpf) {
-  const token = process.env.GESTAODS_TOKEN;
+// Busca paciente pelo CPF usando o token fornecido pelo tenant
+async function buscarPacientePorCPF(cpf, gestaodsToken) {
+  const token = gestaodsToken;
   const url = `https://apidev.gestaods.com.br/api/paciente/${token}/${cpf}/`;
 
   try {
@@ -29,8 +29,8 @@ async function buscarPacientePorCPF(cpf) {
 }
 
 // Função para buscar dados detalhados do paciente
-async function buscarDadosDetalhadosPaciente(cpf) {
-  const token = process.env.GESTAODS_TOKEN;
+async function buscarDadosDetalhadosPaciente(cpf, gestaodsToken) {
+  const token = gestaodsToken;
   
   // Tenta diferentes endpoints para buscar dados detalhados
   const urls = [
