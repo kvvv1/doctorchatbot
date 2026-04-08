@@ -72,7 +72,7 @@ whatsapp-chatbot/
 1. Crie uma conta no [Z-API](https://z-api.io)
 2. Crie uma instância do WhatsApp
 3. Obtenha sua API Key e Instance ID
-4. Configure o webhook para: `https://seu-dominio.com/webhook`
+4. Configure o webhook para: `https://seu-dominio.com/tenant/{tenantId}/webhook`
 
 ### GestãoDS Setup
 1. Configure sua conta no GestãoDS
@@ -113,7 +113,7 @@ GET /listagem/{token}?data_inicial=04/08/2025&data_final=03/09/2025
 
 ## 📡 API Endpoints
 
-### POST /webhook
+### POST /tenant/:tenantId/webhook
 Recebe mensagens do Z-API
 
 **Body:**
@@ -157,7 +157,7 @@ Recebe mensagens do Z-API
 
 ## 🔄 Fluxo de Funcionamento
 
-1. **Recebimento**: Z-API envia mensagem para `/webhook`
+1. **Recebimento**: Z-API envia mensagem para `/tenant/:tenantId/webhook`
 2. **Processamento**: `messageController` processa a mensagem
 3. **GestãoDS**: Criação/atualização de leads
 4. **Resposta**: Envio da resposta via Z-API

@@ -8,6 +8,7 @@ const { flowController } = require('./services/flowController');
 const zapiService = require('./services/zapiService');
 const { supabase } = require('./services/supabaseClient');
 const LOG_MESSAGES = process.env.LOG_MESSAGES || 'key';
+const tenantMiddleware = require('./middlewares/tenantMiddleware');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -46,7 +47,7 @@ const painelRouter = require('./routes/painel');
 app.use('/api/painel', painelRouter);
 
 // Rota de webhook para receber mensagens do Z-API
-app.post('/webhook', webhookLimiter, async (req, res) => {
+app.post('/tenant/:tenantId/webhook', tenantMiddleware, webhookLimiter, async (req, res) => {
   try {
     console.log('📨 Mensagem recebida:', JSON.stringify(req.body, null, 2));
     
@@ -93,7 +94,7 @@ app.post('/webhook', webhookLimiter, async (req, res) => {
       return res.status(400).send('Mensagem inválida');
     }
 
-    console.log(`🧠 Processando mensagem do usuário ${userPhone}: "${userMessage}"`);
+    console.log(`🧠 Processando mensagem do usuário ${userPhone}: "${userMessage}" (tenant: ${req.tenantId})`);
 
     // Se houver atendimento humano pendente ou em andamento, não responder para evitar conflito
     try {
@@ -253,7 +254,7 @@ app.listen(PORT, () => {
   console.log('🚀 Servidor iniciado com sucesso!');
   console.log(`📡 Porta: ${PORT}`);
   console.log(`🌐 URL: http://localhost:${PORT}`);
-  console.log(`📨 Webhook: http://localhost:${PORT}/webhook`);
+  console.log(`📨 Webhook: http://localhost:${PORT}/tenant/<tenantId>/webhook`);
   console.log(`🧪 Teste: http://localhost:${PORT}/test`);
   console.log(`📊 Status: http://localhost:${PORT}/status`);
   console.log('✅ Sistema pronto para receber mensagens!');
