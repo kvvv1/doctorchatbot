@@ -1,0 +1,8 @@
+[
+  {
+    "name": "tenant_exemplo",
+    "zapi_api_key": "ZAPI_API_KEY",
+    "zapi_instance_id": "ZAPI_INSTANCE_ID",
+    "gestaods_token": "GESTAODS_TOKEN"
+  }
+]
