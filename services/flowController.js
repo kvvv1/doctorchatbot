@@ -9,18 +9,18 @@ const { cadastrarPacienteNoGestao } = require('./apiGestaoService');
 const { isValidCPF, formatCPF } = require('../utils/validations');
 
 // ✅ Funções auxiliares para gerenciamento de estado e contexto
-async function salvarEstado(userPhone, estado) {
+async function salvarEstado(tenantId, userPhone, estado) {
   try {
-    await memoryStore.set(`state:${userPhone}`, estado);
+    await memoryStore.set(tenantId, `state:${userPhone}`, estado);
     console.log(`🔄 Estado salvo para ${userPhone}: ${estado}`);
   } catch (error) {
     console.error(`❌ Erro ao salvar estado para ${userPhone}:`, error);
   }
 }
 
-async function recuperarEstado(userPhone) {
+async function recuperarEstado(tenantId, userPhone) {
   try {
-    const estado = await memoryStore.get(`state:${userPhone}`);
+    const estado = await memoryStore.get(tenantId, `state:${userPhone}`);
     return estado || 'inicio';
   } catch (error) {
     console.error(`❌ Erro ao recuperar estado para ${userPhone}:`, error);
@@ -28,18 +28,18 @@ async function recuperarEstado(userPhone) {
   }
 }
 
-async function salvarContexto(userPhone, contexto) {
+async function salvarContexto(tenantId, userPhone, contexto) {
   try {
-    await memoryStore.set(`context:${userPhone}`, contexto);
+    await memoryStore.set(tenantId, `context:${userPhone}`, contexto);
     console.log(`💾 Contexto salvo para ${userPhone}:`, JSON.stringify(contexto, null, 2));
   } catch (error) {
     console.error(`❌ Erro ao salvar contexto para ${userPhone}:`, error);
   }
 }
 
-async function recuperarContexto(userPhone) {
+async function recuperarContexto(tenantId, userPhone) {
   try {
-    const contexto = await memoryStore.get(`context:${userPhone}`);
+    const contexto = await memoryStore.get(tenantId, `context:${userPhone}`);
     return contexto || {};
   } catch (error) {
     console.error(`❌ Erro ao recuperar contexto para ${userPhone}:`, error);
@@ -421,7 +421,7 @@ function normalizeName(name) {
     .replace(/\s+/g, ' ');
 }
 
-async function visualizarAgendamentosPorNome(nomePaciente, userPhone) {
+async function visualizarAgendamentosPorNome(nomePaciente, userPhone, tenantId) {
   try {
     const hoje = new Date();
     const dataInicial = hoje.toLocaleDateString('pt-BR'); // ex: 04/08/2025
@@ -481,9 +481,9 @@ async function visualizarAgendamentosPorNome(nomePaciente, userPhone) {
     }
 
     if (userPhone) {
-      await salvarEstado(userPhone, 'aguardando_selecao_agendamento');
+      await salvarEstado(tenantId, userPhone, 'aguardando_selecao_agendamento');
       setState(userPhone, 'aguardando_selecao_agendamento');
-      await salvarContexto(userPhone, {
+      await salvarContexto(tenantId, userPhone, {
         agendamentosDisponiveis: agendamentosFiltrados.map((ag, i) => ({
           index: i + 1,
           data: ag.data_agendamento || ag.data || 'Data não informada',
@@ -1119,7 +1119,7 @@ async function handleConfirmandoCadastro(phone, message) {
 }
 
 // ✅ Confirmando paciente
-async function handleConfirmandoPaciente(phone, message) {
+async function handleConfirmandoPaciente(tenantId, phone, message) {
   const context = getContext(phone);
   const messageLower = message.toLowerCase().trim();
 
@@ -1129,7 +1129,7 @@ async function handleConfirmandoPaciente(phone, message) {
     const escolhaNum = parseInt(message.trim(), 10);
     if (!isNaN(escolhaNum)) {
       // redireciona para seleção de agendamento existente
-      return await handleAguardandoSelecaoAgendamento(phone, message);
+      return await handleAguardandoSelecaoAgendamento(tenantId, phone, message);
     }
   }
 
@@ -1141,7 +1141,7 @@ async function handleConfirmandoPaciente(phone, message) {
       return '❗ Por favor, digite um nome válido com pelo menos 3 letras.';
     }
 
-    const mensagem = await visualizarAgendamentosPorNome(nome, phone);
+    const mensagem = await visualizarAgendamentosPorNome(nome, phone, tenantId);
 
     if (mensagem.includes('📭 Você não possui agendamentos')) {
       setState(phone, 'finalizado');
@@ -1552,7 +1552,7 @@ function handleEstadoFinal(phone, message) {
 }
 
 // 🧠 Função principal do flowController
-async function flowController(message, phone) {
+async function flowController(message, phone, tenantId = 'default') {
   const state = getState(phone);
   console.log(`🧠 Processando mensagem do usuário ${phone} no estado: ${state}`);
   try { await logMessageToSupabase(phone, 'in', message); } catch {}
@@ -1733,7 +1733,7 @@ async function flowController(message, phone) {
         return await handleConfirmandoCadastro(phone, message);
 
       case 'confirmando_paciente':
-        return await handleConfirmandoPaciente(phone, message);
+        return await handleConfirmandoPaciente(tenantId, phone, message);
 
       case 'escolhendo_data':
         return await handleEscolhendoData(phone, message);
@@ -1755,7 +1755,7 @@ async function flowController(message, phone) {
         );
 
       case 'aguardando_acao_agendamento':
-        return await handleAguardandoAcaoAgendamento(phone, message);
+        return await handleAguardandoAcaoAgendamento(tenantId, phone, message);
 
       case 'aguardando_agendamento_para_acao':
         return await selecionarAgendamentoParaEditar(message, getContext(phone), phone);
@@ -1764,7 +1764,7 @@ async function flowController(message, phone) {
         return await decidirAcaoAgendamento(message, getContext(phone), phone);
 
       case 'aguardando_selecao_agendamento':
-        return await handleAguardandoSelecaoAgendamento(phone, message);
+        return await handleAguardandoSelecaoAgendamento(tenantId, phone, message);
       
       case 'aguardando_escolha_agendamento':
         return await handleAguardandoEscolhaAgendamento(phone, message);
@@ -1993,10 +1993,10 @@ async function handleAguardandoEscolhaAgendamento(phone, message) {
 }
 
 // 🔄 Função para aguardar seleção de agendamento
-async function handleAguardandoSelecaoAgendamento(phone, message) {
+async function handleAguardandoSelecaoAgendamento(tenantId, phone, message) {
   const indexEscolhido = parseInt(message);
 
-  const contexto = await recuperarContexto(phone);
+  const contexto = await recuperarContexto(tenantId, phone);
   const lista = contexto?.agendamentosDisponiveis || [];
 
   const agendamento = lista.find((item) => item.index === indexEscolhido);
@@ -2005,12 +2005,12 @@ async function handleAguardandoSelecaoAgendamento(phone, message) {
     return '❌ Número inválido. Por favor, digite o número de um agendamento listado.';
   }
 
-  await salvarContexto(phone, {
+  await salvarContexto(tenantId, phone, {
     ...contexto,
     agendamentoSelecionado: agendamento
   });
 
-  await salvarEstado(phone, 'aguardando_acao_agendamento');
+  await salvarEstado(tenantId, phone, 'aguardando_acao_agendamento');
   setState(phone, 'aguardando_acao_agendamento');
 
   return `Você selecionou o agendamento com *${agendamento.medico}* no dia *${agendamento.data}*.
@@ -2023,12 +2023,12 @@ Digite o número da opção.`;
 }
 
 // 🔄 Função para aguardar ação do agendamento
-async function handleAguardandoAcaoAgendamento(phone, message) {
-  const contexto = await recuperarContexto(phone);
+async function handleAguardandoAcaoAgendamento(tenantId, phone, message) {
+  const contexto = await recuperarContexto(tenantId, phone);
   const agendamento = contexto?.agendamentoSelecionado;
 
   if (!agendamento) {
-    await salvarEstado(phone, 'finalizado');
+    await salvarEstado(tenantId, phone, 'finalizado');
     return '⚠️ Ocorreu um erro ao recuperar seu agendamento. Digite *menu* para recomeçar.';
   }
 
@@ -2049,7 +2049,7 @@ async function handleAguardandoAcaoAgendamento(phone, message) {
       });
     } catch (e) {}
 
-    await salvarEstado(phone, 'finalizado');
+    await salvarEstado(tenantId, phone, 'finalizado');
     setState(phone, 'finalizado');
     return `📅 Solicitação de reagendamento registrada. Uma secretária entrará em contato para definir a nova data.`;
   }
@@ -2070,7 +2070,7 @@ async function handleAguardandoAcaoAgendamento(phone, message) {
       });
     } catch (e) {}
 
-    await salvarEstado(phone, 'finalizado');
+    await salvarEstado(tenantId, phone, 'finalizado');
     setState(phone, 'finalizado');
     return `❌ Solicitação de cancelamento registrada. Em breve a secretária entrará em contato.`;
   }

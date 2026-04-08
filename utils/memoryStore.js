@@ -1,22 +1,27 @@
 // Exemplo simples: substitua por Redis ou persistência real quando possível
 const store = new Map();
 
+function buildKey(tenantId = 'default', key) {
+  return `${tenantId}:${key}`;
+}
+
 module.exports = {
-  set: async (key, value) => {
-    store.set(key, JSON.stringify(value));
+  set: async (tenantId, key, value) => {
+    store.set(buildKey(tenantId, key), JSON.stringify(value));
   },
-  get: async (key) => {
-    const v = store.get(key);
+  get: async (tenantId, key) => {
+    const v = store.get(buildKey(tenantId, key));
     return v ? JSON.parse(v) : null;
   },
   // Mantém compatibilidade com funções existentes
-  getSession: (userPhone) => {
-    return store.get(`session:${userPhone}`);
+  getSession: (tenantId, userPhone) => {
+    const v = store.get(buildKey(tenantId, `session:${userPhone}`));
+    return v ? JSON.parse(v) : null;
   },
-  setSession: (userPhone, sessionId) => {
-    store.set(`session:${userPhone}`, JSON.stringify(sessionId));
+  setSession: (tenantId, userPhone, sessionId) => {
+    store.set(buildKey(tenantId, `session:${userPhone}`), JSON.stringify(sessionId));
   },
-  clearSession: (userPhone) => {
-    store.delete(`session:${userPhone}`);
+  clearSession: (tenantId, userPhone) => {
+    store.delete(buildKey(tenantId, `session:${userPhone}`));
   }
-}; 
+};
