@@ -7,6 +7,8 @@ require('dotenv').config();
 const { flowController } = require('./services/flowController');
 const zapiService = require('./services/zapiService');
 const { supabase } = require('./services/supabaseClient');
+const { handleWebhook } = require('./controllers/messageController');
+const tenantResolver = require('./utils/tenantResolver');
 const LOG_MESSAGES = process.env.LOG_MESSAGES || 'key';
 
 const app = express();
@@ -44,6 +46,9 @@ app.get('/', (req, res) => {
 // ------------------------------
 const painelRouter = require('./routes/painel');
 app.use('/api/painel', painelRouter);
+
+// Rota de webhook multi-tenant
+app.post('/tenant/:tenantId/webhook', tenantResolver, handleWebhook);
 
 // Rota de webhook para receber mensagens do Z-API
 app.post('/webhook', webhookLimiter, async (req, res) => {

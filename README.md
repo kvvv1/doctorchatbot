@@ -7,7 +7,7 @@ Um chatbot inteligente para WhatsApp que integra com sistema GestãoDS para auto
 - **Integração com Z-API**: Recebe e envia mensagens via WhatsApp
 - **GestãoDS CRM**: Gerenciamento de leads e oportunidades
 - **Memory Store**: Gerenciamento de estado das conversas
-- **Webhook**: Endpoint para receber mensagens do Z-API
+- **Webhook**: Endpoint multi-tenant para receber mensagens do Z-API (`/tenant/:tenantId/webhook`)
 - **Agendamento de Consultas**: Sistema completo de agendamento
 - **Visualização de Agendamentos**: Lista agendamentos futuros (120 dias)
 - **Reagendamento**: Permite alterar data/hora de consultas
@@ -72,7 +72,7 @@ whatsapp-chatbot/
 1. Crie uma conta no [Z-API](https://z-api.io)
 2. Crie uma instância do WhatsApp
 3. Obtenha sua API Key e Instance ID
-4. Configure o webhook para: `https://seu-dominio.com/webhook`
+4. Configure o webhook para: `https://seu-dominio.com/tenant/{tenantId}/webhook`
 
 ### GestãoDS Setup
 1. Configure sua conta no GestãoDS
@@ -113,8 +113,8 @@ GET /listagem/{token}?data_inicial=04/08/2025&data_final=03/09/2025
 
 ## 📡 API Endpoints
 
-### POST /webhook
-Recebe mensagens do Z-API
+### POST /tenant/:tenantId/webhook
+Recebe mensagens do Z-API para o tenant especificado
 
 **Body:**
 ```json
@@ -157,7 +157,7 @@ Recebe mensagens do Z-API
 
 ## 🔄 Fluxo de Funcionamento
 
-1. **Recebimento**: Z-API envia mensagem para `/webhook`
+1. **Recebimento**: Z-API envia mensagem para `/tenant/:tenantId/webhook`
 2. **Processamento**: `messageController` processa a mensagem
 3. **GestãoDS**: Criação/atualização de leads
 4. **Resposta**: Envio da resposta via Z-API
